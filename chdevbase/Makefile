@@ -8,7 +8,7 @@ app := chdevbaseApp
 
 
 build: kernel_modules
-	$(CC) $(app).c -o $(app)
+	$(CROSS_COMPILE)gcc $(app).c -o $(app)
 
 kernel_modules:
 	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE)  -C $(KERNELDIR) M=$(CURRENT_PATH) modules

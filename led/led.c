@@ -98,13 +98,13 @@ static ssize_t read_led(struct file *filp, char __user *buf,
 		return -1;
 	}
 
-	return sizeof(led_state);
+	return strlen(led_state);
 }
 
 static ssize_t write_led(struct file *filp, const char __user *buf,
 		size_t cnt, loff_t *offt)
 {
-	char user_data[2];
+	char user_data[2] = {0};
 
 	if(copy_from_user(user_data, buf, 2)) {
 		
@@ -123,7 +123,7 @@ static ssize_t write_led(struct file *filp, const char __user *buf,
 		printk(KERN_INFO "led change state to %c\r\n", user_data[0]);
 	}
 
-	return cnt;
+	return strlen(user_data);
 }
 
 

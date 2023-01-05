@@ -7,7 +7,7 @@
 #include <string.h>
 
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
 	int fd;
 	char readbuf[16] = {0};
@@ -32,7 +32,6 @@ int main(int argc, char *argv[])
 		}
 
 		printf("read %ld byte(s):%s\n", read_size, readbuf);
-	
 	}
 
 
@@ -48,7 +47,6 @@ int main(int argc, char *argv[])
 
 		printf("write %ld byte(s):%s\n", write_size, writebuf);
 	}
-
 
 	close(fd);
 
