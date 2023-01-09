@@ -6,7 +6,7 @@
 
 TARGET ?=
 
-sub-dirs := $(filter-out . output, $(foreach dir, $(shell find . -maxdepth 1 -type d), $(notdir $(dir))))
+sub-dirs := $(filter-out . output .git, $(foreach dir, $(shell find . -maxdepth 1 -type d), $(notdir $(dir))))
 
 all-dep := chdevbase led
 
