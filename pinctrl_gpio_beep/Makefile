@@ -3,8 +3,8 @@ CURRENT_PATH := $(shell pwd)
 ARCH ?= arm
 CROSS_COMPILE ?= arm-linux-gnueabihf-
 
-obj-m := pinctrlgpioled.o
-app := pinctrlgpioledApp
+obj-m := pinctrl_gpio_beep.o
+app := pinctrl_gpio_beepApp
 
 
 build: kernel_modules
