@@ -15,7 +15,7 @@ int main(int argc, char **argv)
 	ssize_t read_size;
 	ssize_t write_size;
 
-	fd = open("/dev/pinctrlgpio_led", O_RDWR);
+	fd = open("/dev/pinctrlgpio_beep", O_RDWR);
 
 	if (fd == -1) {
 		perror("open");

@@ -12,9 +12,9 @@
 
 #define BEEP_NAME "pinctrlgpio_beep" 
 
-#define GPIO1_DR		(0x0209c000)
+#define GPIO5_DR		(0x020ac000)
 
-static void __iomem *MAP_GPIO1_DR;
+static void __iomem *MAP_GPIO5_DR;
 
 enum beep_state_t {
 	BEEP_OFF,
@@ -51,8 +51,8 @@ static ssize_t read_beep(struct file *filp, char __user *buf,
 	u32 val;
 	char beep_state[2] = { 0	};
 
-	val = readl(MAP_GPIO1_DR);
-	val = (val >> 3);
+	val = readl(MAP_GPIO5_DR);
+	val = (val >> 1);
 	val &= (0x00000001);
 
 	if (val == 0) {
@@ -117,7 +117,7 @@ static int __init init_beep(void)
 	const char *str;
 	struct property *proper;
 
-	MAP_GPIO1_DR = ioremap(GPIO1_DR, 4);
+	MAP_GPIO5_DR = ioremap(GPIO5_DR, 4);
 
 	/*get device node of beep*/
 	pinctrlgpiobeep.nd = of_find_node_by_path("/pinctrlgpiobeep");
