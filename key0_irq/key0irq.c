@@ -93,9 +93,9 @@ static void timer_func(unsigned long arg)
 	struct key0_dev *dev = (struct key0_dev *)arg;
 
 	if (gpio_get_value(dev->gpio_key0) == 0) {	/*按键按下*/
-		atomic_set(&dev->key0_val, 1);
+		atomic_set(&dev->key0_val, '1');
 	} else {
-		atomic_set(&dev->key0_val, 0);
+		atomic_set(&dev->key0_val, '0');
 	}
 }
 
