@@ -158,8 +158,8 @@ static void __exit key0_exit(void)
 	del_timer_sync(&key0.timer);
 	free_irq(key0.key0irq.irq_num, &key0);
 	gpio_free(key0.gpio_key0);
-    input_free_device(key0.inputdev);
     input_unregister_device(key0.inputdev);
+    input_free_device(key0.inputdev);
 }	
 
 module_init(key0_init);
