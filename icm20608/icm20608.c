@@ -9,19 +9,30 @@
 #include <linux/of_gpio.h>
 #include <linux/gpio.h>
 #include <linux/spi/spi.h>
+#include <linux/gfp.h>
 
 #define DEV_NAME "icm20608"
 #define DEV_CNT  1
 
-#define AP3216C_SYSTEMCONG        0x00
-#define AP3216C_INTSTATUS         0x01
-#define AP3216C_INTCLEAR          0x02
-#define AP3216C_IRDATALOW         0x0a
-#define AP3216C_IRDATAHIGH        0x0b
-#define AP3216C_ALSDATALOW        0x0c
-#define AP3216C_ALSDATAHIGH       0x0d
-#define AP3216C_PSDATALOW         0x0e
-#define AP3216C_PSDATAHIGH        0x0f
+/* 加速度输出 */
+#define ICM20_ACCEL_XOUT_H          0x3B
+#define ICM20_ACCEL_XOUT_L          0x3C
+#define ICM20_ACCEL_YOUT_H          0x3D
+#define ICM20_ACCEL_YOUT_L          0x3E
+#define ICM20_ACCEL_ZOUT_H          0x3F
+#define ICM20_ACCEL_ZOUT_L          0x40
+
+/* 温度输出 */
+#define ICM20_TEMP_OUT_H            0x41
+#define ICM20_TEMP_OUT_L            0x42
+
+/* 陀螺仪输出 */
+#define ICM20_GYRO_XOUT_H           0x43
+#define ICM20_GYRO_XOUT_L           0x44
+#define ICM20_GYRO_YOUT_H           0x45
+#define ICM20_GYRO_YOUT_L           0x46
+#define ICM20_GYRO_ZOUT_H           0x47
+#define ICM20_GYRO_ZOUT_L           0x48
 
 struct icm20608_dev {
         dev_t devid;
@@ -58,14 +69,14 @@ static int icm20608_write_regs(struct icm20608_dev *dev, u8 reg,
                 return -ENOMEM;
         }
 
-        rxdata = kzalloc(sizeof(char) * len, GFP_KENEL);
+        rxdata = kzalloc(sizeof(char) * len, GFP_KERNEL);
 
         if(!rxdata) {
                 goto out1; 
         }
 
         txdata[0] = reg & ~0x80;
-        memcpy(txdata + 1, buf, len);
+        memcpy(txdata + 1, data, len);
         t->tx_buf = txdata;
         t->len = len + 1;
         spi_message_init(&m);
@@ -102,7 +113,7 @@ static unsigned char icm20608_read_regs(struct icm20608_dev *dev, u8 reg,
                 return -ENOMEM;
         }
 
-        rxdata = kzalloc(sizeof(char) * len, GFP_KENEL);
+        rxdata = kzalloc(sizeof(char) * len, GFP_KERNEL);
 
         if(!rxdata) {
                 goto out1; 
@@ -164,6 +175,7 @@ static ssize_t icm20608_read(struct file *filp, char __user *buf,
         size_t sz, loff_t *offt)
 {
         signed int data[7];
+        int ret;
         struct icm20608_dev *dev = (struct icm20608_dev *)filp->private_data;
 
         icm20608_readdata(dev);
@@ -176,24 +188,26 @@ static ssize_t icm20608_read(struct file *filp, char __user *buf,
         data[5] = dev->accel_z;
         data[6] = dev->temp;
 
-        copy_to_user(buf, data, sizeof(data));
+        ret = copy_to_user(buf, data, sizeof(data));
 
         return sizeof(data);
 }
 
-//static int icm20608_write_regs(struct icm20608_dev *dev, u8 reg, u8 *buf, int len)
-//{
-//        return 0;
-//}
-//
-//static void icm20608_write_reg(struct icm20608_dev *dev, u8 reg, u8 data)
-//{
-//}
 static void icm20608_reginit(void)
 {
-    u8 value = 0;
+        unsigned char who_am_i;
 
-    icm20608_write_onereg(&icm20608, ICM)
+        icm20608_write_onereg(&icm20608, 0x6b, 0x80);
+        mdelay(100);
+        icm20608_write_onereg(&icm20608, 0x6b, 0x01);
+        icm20608_write_onereg(&icm20608, 0x6B, 0x01); // 唤醒设备
+        icm20608_write_onereg(&icm20608, 0x1B, 0x18); // 设置陀螺仪量程为2000dps
+        icm20608_write_onereg(&icm20608, 0x1C, 0x18); // 设置加速度计量程为16g)))
+
+        // 读取WHO_AM_I寄存器
+        who_am_i = icm20608_read_onereg(&icm20608, 0x75);
+        printk(KERN_INFO "ICM20608 WHO_AM_I = 0x%x\n", who_am_i);
+
 }
 
 static int icm20608_open(struct inode *node, struct file *filp)
@@ -207,11 +221,6 @@ static int icm20608_open(struct inode *node, struct file *filp)
 static int icm20608_release(struct inode *node, struct file *filp)
 {
         return 0;
-}
-
-static void icm20608_reginit(void)
-{
-    
 }
 
 static struct file_operations icm20608_ops = {
@@ -261,8 +270,8 @@ static int icm20608_probe(struct spi_device *spidev)
 		return PTR_ERR(icm20608.pdevice);
 
     spidev->mode = SPI_MODE_0; /*CPOL=0, CPHA=0*/
-    spidev_setup(spi);
-    icm20608.private_data = spi;
+    spi_setup(spidev);
+    icm20608.private_data = spidev;
 
     icm20608_reginit();
 
