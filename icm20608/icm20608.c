@@ -177,6 +177,7 @@ static ssize_t icm20608_read(struct file *filp, char __user *buf,
         signed int data[7];
         int ret;
         struct icm20608_dev *dev = (struct icm20608_dev *)filp->private_data;
+        printk("===========2");
 
         icm20608_readdata(dev);
 
@@ -188,6 +189,7 @@ static ssize_t icm20608_read(struct file *filp, char __user *buf,
         data[5] = dev->accel_z;
         data[6] = dev->temp;
 
+        printk("===========1");
         ret = copy_to_user(buf, data, sizeof(data));
 
         return sizeof(data);
@@ -200,9 +202,17 @@ static void icm20608_reginit(void)
         icm20608_write_onereg(&icm20608, 0x6b, 0x80);
         mdelay(100);
         icm20608_write_onereg(&icm20608, 0x6b, 0x01);
-        icm20608_write_onereg(&icm20608, 0x6B, 0x01); // 唤醒设备
-        icm20608_write_onereg(&icm20608, 0x1B, 0x18); // 设置陀螺仪量程为2000dps
-        icm20608_write_onereg(&icm20608, 0x1C, 0x18); // 设置加速度计量程为16g)))
+        mdelay(100);
+
+        icm20608_write_onereg(&icm20608, 0x19, 0x00);                /*输出速率是内部采样率                */
+        icm20608_write_onereg(&icm20608, 0x1b, 0x18); // 设置陀螺仪量程为2000dps
+        icm20608_write_onereg(&icm20608, 0x1c, 0x18); // 设置加速度计量程为16g)))
+
+        icm20608_write_onereg(&icm20608, 0x1a, 0x04);        /* 陀螺仪低通滤波BW=20Hz                */
+        icm20608_write_onereg(&icm20608, 0x1d, 0x04); /* 加速度计低通滤波BW=21.2Hz            */
+        icm20608_write_onereg(&icm20608, 0x6c, 0x00);    /* 打开加速度计和陀螺仪所有轴               */
+        icm20608_write_onereg(&icm20608, 0x1e, 0x00);   /* 关闭低功耗                       */
+        icm20608_write_onereg(&icm20608, 0x23, 0x00);       /* 关闭FIFO                     */
 
         // 读取WHO_AM_I寄存器
         who_am_i = icm20608_read_onereg(&icm20608, 0x75);
